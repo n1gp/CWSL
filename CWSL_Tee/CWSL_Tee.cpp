@@ -57,6 +57,7 @@ int gL0[MAX_HW_RX_COUNT];
 
 // ADC bitmask for MAX_HW_RX_COUNT
 int gADCMask = 0;
+bool gSetADC = false;
 
 // Max number of receivers the hardware is capable of
 int gHwRxCnt = 0;
@@ -197,7 +198,7 @@ void LoadConfig(void)
 	  for (i = 0; i < j; i++)
 		  if (ln[i] == '1') gADCMask += (int)pow(2, i);
 	  //Print("gADCMask=%X", gADCMask);
-
+	  gSetADC = true;
   }
 
   // close file
@@ -519,7 +520,7 @@ void ReStartRx(bool doStop)
 		(*pSetRxFrequency)(gL0[i], i);
 	}
 
-	if ((pSetAdc != NULL) && gADCMask)
+	if ((pSetAdc != NULL) && gSetADC)
 	{
 		Sleep(1000);
 		(*pSetAdc)(gADCMask);
@@ -839,7 +840,7 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
 
 		 // call lower functions
 		 (*pStartRx)(pSettings);
-		 if ((pSetAdc != NULL) && gADCMask)
+		 if ((pSetAdc != NULL) && gSetADC)
 		 {
 			 Sleep(1000);
 			 (*pSetAdc)(gADCMask);
