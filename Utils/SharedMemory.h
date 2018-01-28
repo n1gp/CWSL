@@ -150,7 +150,7 @@ class CSharedMemory {
 
   // precti blok dat
   // (pokud neni k dispozici dostatecny pocet dat vraci FALSE)
-  BOOL Read(PBYTE Ptr, DWORD Len);
+  BOOL Read(PBYTE Ptr, DWORD Len, char *ErrorInfo);
   
   // odpoj se od useku sdilene pameti
   void Close(void);

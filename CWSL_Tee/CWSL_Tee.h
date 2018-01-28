@@ -16,6 +16,9 @@
 #define BLOCKS_PER_SEC  93.75
 
 #define MAX_RX_COUNT  8
+#define MAX_HW_RX_COUNT  16
+#define MAST_COMM_SM  MAX_HW_RX_COUNT
+#define SUBMAST_COMM_SM  MAX_HW_RX_COUNT+1
 
 #pragma pack(push, 16) 
 typedef struct {float Re, Im;} Cmplx;
@@ -51,6 +54,15 @@ typedef struct {
 
 } SdrInfo, *PSdrInfo;
 
+typedef struct {
+
+	int   Change;
+	int   MasterRxCount;
+	int   SubMasterRxCount;
+	int   HwRxCount;
+	int   Data[MAX_RX_COUNT];
+
+} ModeData, *PModeData;
 
 typedef struct {
 
@@ -75,6 +87,8 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings);
 extern "C" CWSL_TEE_API void __stdcall StopRx(void);
 
 extern "C" CWSL_TEE_API void __stdcall SetRxFrequency(int Frequency, int Receiver);
+
+extern "C" CWSL_TEE_API void __stdcall SetAdc(int AdcMask);
 
 extern "C" CWSL_TEE_API void __stdcall SetCtrlBits(unsigned char Bits);
 

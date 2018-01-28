@@ -204,19 +204,27 @@ BOOL CSharedMemory::Write(PBYTE Ptr, DWORD Len)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // precti blok dat
-BOOL CSharedMemory::Read(PBYTE Ptr, DWORD Len)
+BOOL CSharedMemory::Read(PBYTE Ptr, DWORD Len, char *ErrorInfo)
 {long dLen;
  DWORD bLen;
 
  // pokud nejsme inicializovani vrat FALSE
- if (m_Event == NULL) return(FALSE);
+ if (m_Event == NULL)
+ {
+	 if (ErrorInfo != NULL) sprintf(ErrorInfo, "m_Event == NULL");
+	 return(FALSE);
+ }
 
  // zjisti kolik je k dispozici dat
  dLen = m_Top + (*m_pCurrent) - m_Current;
  if (dLen < 0) dLen += m_DataLength;
 
  // pokud je pozadovano vice dat vrat FALSE
- if ((long)Len > dLen) return(FALSE);
+ if ((long)Len > dLen)
+ {
+	 if (ErrorInfo != NULL) sprintf(ErrorInfo, "Len: %d > dLen: %d", Len, dLen);
+	 return(FALSE);
+ }
 
  // spocti kolik muzeme precist dat do konce bufferu
  bLen = m_Bot - m_Current;
