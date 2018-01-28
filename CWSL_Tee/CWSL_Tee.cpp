@@ -56,7 +56,7 @@ int gBlockInSamples = 0;
 int gL0[MAX_HW_RX_COUNT];
 
 // ADC bitmask for MAX_HW_RX_COUNT
-int gADCMask;
+int gADCMask = 0;
 
 // Max number of receivers the hardware is capable of
 int gHwRxCnt = 0;
@@ -518,7 +518,12 @@ void ReStartRx(bool doStop)
 		// call lower functions
 		(*pSetRxFrequency)(gL0[i], i);
 	}
-	if ((pSetAdc != NULL) && gADCMask) (*pSetAdc)(gADCMask);
+
+	if ((pSetAdc != NULL) && gADCMask)
+	{
+		Sleep(1000);
+		(*pSetAdc)(gADCMask);
+	}
 
 	Print("ReStartRx stopping");
 }
@@ -832,9 +837,13 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
 	 {
 		 pSettings->pIQProc = MyIQProc;
 
-		 // call lower function
+		 // call lower functions
 		 (*pStartRx)(pSettings);
-		 if ((pSetAdc != NULL) && gADCMask) (*pSetAdc)(gADCMask);
+		 if ((pSetAdc != NULL) && gADCMask)
+		 {
+			 Sleep(1000);
+			 (*pSetAdc)(gADCMask);
+		 }
 
 		 // bring back original callback routine
 		 pSettings->pIQProc = gSet.pIQProc;
