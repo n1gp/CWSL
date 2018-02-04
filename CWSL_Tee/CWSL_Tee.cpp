@@ -473,8 +473,8 @@ BOOL Alloc(void)
 // Our callback procedure (Master mode)
 extern "C" void __stdcall MyIQProc(int RxHandle, CmplxAA Data)
 {int i;
- 
- // write IQ samples to shared memories
+
+// write IQ samples to shared memories
  for (i = 0; i < (gSubRxCnt + gMastRxCnt); i++) 
  {
 	 if (!gSM[i].Write((PBYTE)Data[i], gBlockInSamples * sizeof(Cmplx)))
@@ -520,12 +520,6 @@ void ReStartRx(bool doStop)
 		(*pSetRxFrequency)(gL0[i], i);
 	}
 
-	if ((pSetAdc != NULL) && gSetADC)
-	{
-		Sleep(1000);
-		(*pSetAdc)(gADCMask);
-	}
-
 	Print("ReStartRx stopping");
 }
 
@@ -543,6 +537,14 @@ DWORD WINAPI CommWorker(LPVOID lpParameter)
 	bool restartLoop;
 
 	Print("Starting CommWorker thread as %s", (gMaster) ? "Master" : "SubMaster");
+
+	if ((pSetAdc != NULL) && gSetADC && gMaster)
+	{
+		gSetADC = false;
+		Sleep(100);
+		(*pSetAdc)(gADCMask);
+	}
+
 	// main loop
 	while (!StopFlagM)
 	{
@@ -830,7 +832,7 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
   Free();
   return;
  }
-
+ 
  // according to mode ...
  if (gMaster || gSubMaster)
  {// Master -> redirect IQ callback routine
@@ -840,11 +842,6 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
 
 		 // call lower functions
 		 (*pStartRx)(pSettings);
-		 if ((pSetAdc != NULL) && gSetADC)
-		 {
-			 Sleep(1000);
-			 (*pSetAdc)(gADCMask);
-		 }
 
 		 // bring back original callback routine
 		 pSettings->pIQProc = gSet.pIQProc;
@@ -852,6 +849,7 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
 		 gModeData.HwRxCount = gHwRxCnt;
 		 gModeData.MasterRxCount = gMastRxCnt;
 		 gModeData.Change++;
+
 		 if (!gSM[MAST_COMM_SM].Write((PBYTE)&gModeData, sizeof(ModeData)))
 			 Print("gSM[MAST_COMM_SM].Write FAILED!");
 	 }
@@ -892,6 +890,7 @@ extern "C" CWSL_TEE_API void __stdcall StartRx(PSdrSettings pSettings)
 // Stop of receiving
 extern "C" CWSL_TEE_API void __stdcall StopRx(void)
 {
+ DWORD  dwExitCode;
  Print("StopRx starting");
 
  if (gMaster) (*pStopRx)();
@@ -901,6 +900,7 @@ extern "C" CWSL_TEE_API void __stdcall StopRx(void)
 	 StopFlag = true;
 
 	 // wait for thread
+	 //TerminateThread(hWrk, dwExitCode);
 	 WaitForSingleObject(hWrk, 1000);
 
 	 // close thread handle 
@@ -913,7 +913,8 @@ extern "C" CWSL_TEE_API void __stdcall StopRx(void)
 	 StopFlagM = true;
 
 	 // wait for thread
-	 WaitForSingleObject(hCommWrk, 1000);
+	 TerminateThread(hCommWrk, dwExitCode);
+	 //WaitForSingleObject(hCommWrk, 1000);
 
 	 // close thread handle 
 	 CloseHandle(hCommWrk);
